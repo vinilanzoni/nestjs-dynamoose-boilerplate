@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel, Model } from 'nestjs-dynamoose';
 import { v4 as uuid } from 'uuid';
-
+import { UserRepository } from './user.repository';
 import { User } from './user.model';
-
 
 @Injectable()
 export class UserService {
+  constructor(private readonly userRepository: UserRepository) {}
 
-    constructor(
-        @InjectModel('User') private userModel: Model<User, string>
-    ) {}
+  async create(userData: Omit<User, 'id'>) {
+    const userId = uuid();
+    const user: User = { id: userId, ...userData };
+    return await this.userRepository.create(user);
+  }
 
-    async getUsers() {
-        return this.userModel.scan().exec();
-    }
+  async update(id: string, user: Partial<User>) {
+    return await this.userRepository.update({ id }, user);
+  }
 
-    async getUser(userId: string) {
-        return this.userModel.get(userId);
-    }
+  async findOne(id: string) {
+    return await this.userRepository.findOne({ id });
+  }
 
-    async createUser(user: User): Promise<User> {
-        user.id = uuid();
-        return this.userModel.create(user);
-    }
+  async findAll() {
+    return await this.userRepository.findAll();
+  }
 }
